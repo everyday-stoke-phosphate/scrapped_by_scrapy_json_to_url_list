@@ -43,9 +43,9 @@ def main():
     not_include_out.to_json(
         "{directory}{name}-not-include.json".format(directory=import_directory, name=out_name),
         orient='records', force_ascii=False)
-    # urlリストを作成
+    # urlのみのリストを作成
     not_include_out.to_csv(
-        "{directory}{name}{-not-include.csv".format(directory=import_directory, name=out_name),
+        "{directory}{name}{-not-include.txt".format(directory=import_directory, name=out_name),
         columns=['url'], header=False, index=False)
     print("end")
 
