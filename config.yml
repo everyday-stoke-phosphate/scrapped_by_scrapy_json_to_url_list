@@ -18,3 +18,6 @@ search_target_columns:
   - title
   - subtitle
   - description
+# レコードに入ってるデータにリストはあるか？(検索する文字列にリストが入っていないか？
+# scrapyで作成したものは基本的に入っているのでTrueにしてください(bool)
+records_include_list: False

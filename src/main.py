@@ -1,5 +1,7 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
+import json
+
 import pandas as pd
 import yaml
 
@@ -12,13 +14,13 @@ dataディレクトリにある指定しconfig.ymlによって指定したjson�
 """
 
 
-def main():
+def main(config_path: str):
     """ エントリポイント
 
     """
 
     # 設定の読み込み
-    config = import_config()
+    config = import_config(config_path)
     out_name = config["out_name"]
     import_directory = config["import_directory"]
     import_file_name = config["import_file_name"]
@@ -28,7 +30,12 @@ def main():
     search_target_columns = config["search_target_columns"]
 
     # 読み込み
-    df = json_data_import(import_directory, import_file_name, last_number)
+    if config["records_include_list"] is True:
+        # 使うデータにリストが含まれてるときは読み込み方を変更してリストを除去
+        df = import_json_with_list_to_DataFrame(import_directory, import_file_name,
+                                                set(search_target_columns) | set(diff_check_columns))
+    else:
+        df = json_data_import(import_directory, import_file_name, last_number)
 
     # 検索
     out = search_data(df, key_list, search_target_columns)
@@ -45,7 +52,7 @@ def main():
         orient='records', force_ascii=False)
     # urlのみのリストを作成
     not_include_out.to_csv(
-        "{directory}{name}{-not-include.txt".format(directory=import_directory, name=out_name),
+        "{directory}{name}-not-include.txt".format(directory=import_directory, name=out_name),
         columns=['url'], header=False, index=False)
     print("end")
 
@@ -68,12 +75,38 @@ def json_data_import(directory: str, file_name: str, last_number: int):
     :return: 読み込んだデータ(pands)
     """
     df = pd.DataFrame()
+    if last_number == 0:
+        df = pd.read_json(
+            "{path}{file_name}.json".format(path=directory, file_name=file_name),
+            orient='records')
+        return df
+
     for i in range(last_number):
         tmp = pd.read_json(
             "{path}{file_name}{i}.json".format(path=directory, file_name=file_name, i=i),
             orient='records')
         df = pd.concat([df, tmp], ignore_index=True)
     return df.drop_duplicates()
+
+
+def import_json_with_list_to_DataFrame(data_directory: str, file_name: str, target_columns: set):
+    # jsonのデータを読み込みこんでリスト内包辞書内包リストを辞書内包リストに変換
+    # 記事の本文などがリストになっているのを解除
+    """
+
+    :param data_directory: データがあるディレクトリ
+    :param file_name: データのファイル名
+    :param target_columns:検索するカラム名のリスト
+    :return:pandasのデータ
+    """
+    with open("{path}{file_name}.json".format(path=data_directory, file_name=file_name),
+              "r", errors='ignore', encoding="utf-8") as f:
+        data = json.load(f)
+        for i in range(len(data)):  # enumerate()だと動かないがなぜかrange(len())だと動く
+            for dict_key in target_columns:
+                # 読み込んだデータがリストになっているので結合
+                data[i][dict_key] = "".join(data[i][dict_key])
+        return pd.json_normalize(data)
 
 
 def search_data(data, key_list: list, target_columns_list):
@@ -129,4 +162,5 @@ def check_new_entry(new_data, old_data, columns_list: list):
 
 
 if __name__ == "__main__":
-    main()
+    main_config_path = "../config2.yml"
+    main(main_config_path)
