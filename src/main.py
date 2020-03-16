@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 import pandas as pd
+import yaml
 
 """
 データ内に指定のキーワードを含むレコードと含まないレコードに分割
@@ -16,15 +17,15 @@ def main():
 
     """
 
-    out_name = "out"
-    import_directory = "../data/"
-    import_file_name = "all_article"
-    last_number = 10
-    key_list = ["新型肝炎", "新型コロナ", "プリンセス号", "ウェルステルダム",
-                "新型ウイルス", "感染", "休校", "マスク", "武漢",
-                "ウイルス性肺炎", "コロナウイルス", "陰性", "陽性", "ウイルス検査", "肺ペスト"]
-    diff_check_columns = ["url", "title"]
-    search_target_columns = ["title", "subtitle", "description"]
+    # 設定の読み込み
+    config = import_config()
+    out_name = config["out_name"]
+    import_directory = config["import_directory"]
+    import_file_name = config["import_file_name"]
+    last_number = config["last_number"]
+    key_list = list(pd.read_csv(config["key_list_path"], header=None, squeeze=True))
+    diff_check_columns = config["diff_check_columns"]
+    search_target_columns = config["search_target_columns"]
 
     # 読み込み
     df = json_data_import(import_directory, import_file_name, last_number)
@@ -45,10 +46,17 @@ def main():
     not_include_out.to_json(
         "{directory}{name}-not-include.json".format(directory=import_directory, name=out_name),
         orient='records', force_ascii=False)
+    # urlリストを作成
     not_include_out.to_csv(
         "{directory}{name}{-not-include.csv".format(directory=import_directory, name=out_name),
         columns=['url'], header=False, index=False)
     print("end")
+
+
+def import_config(config_path: str = "../config.yml") -> dict:
+    with open(config_path, encoding='utf-8') as f:
+        config = yaml.safe_load(f.read())
+    return config
 
 
 def json_data_import(directory: str, file_name: str, last_number: int):

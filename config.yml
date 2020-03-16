@@ -1,0 +1,20 @@
+# データがあるディレクトリ
+import_directory: ../data/
+# 読み込むファイル名
+import_file_name: all_article
+# 読み込むファイルの雑賀の番号
+last_number: 10
+# 保存するファイル名
+out_name: out
+# 検索後が入ったcsv(1行1ワード)
+key_list_path: ../key_list.csv
+# レコードの主キー
+# これを組み合わせたのを主キーとして扱う
+diff_check_columns:
+  - url
+  - title
+# 検索する列の名前
+search_target_columns:
+  - title
+  - subtitle
+  - description

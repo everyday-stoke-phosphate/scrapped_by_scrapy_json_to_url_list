@@ -8,7 +8,7 @@ setup(
     author_email='auther adress',
     url='https://github.com/account/',
     license=license,
-    install_requires=["pandas"],
+    install_requires=["pandas", 'PyYAML'],
     # extras_require={
     #     "develop": ["dev-packageA", "dev-packageB"]
     # },
