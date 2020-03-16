@@ -33,19 +33,19 @@ def main():
     out = search_data(df, key_list, search_target_colums)
 
     # 含まれていない部分を抽出
-    not_inclued_out = check_new_entry(df, out, diff_check_columns)
+    not_include_out = check_new_entry(df, out, diff_check_columns)
     # 比較に使った邪魔な業を削除
-    not_inclued_out = not_inclued_out.drop("比較用の列", axis=1)
+    not_include_out = not_include_out.drop("比較用の列", axis=1)
     print("hi")
 
     # 保存
     out.to_json(
         "{directory}{name}-include.json".format(directory=import_directory, name=out_name),
         orient='records', force_ascii=False)
-    not_inclued_out.to_json(
+    not_include_out.to_json(
         "{directory}{name}-not-include.json".format(directory=import_directory, name=out_name),
         orient='records', force_ascii=False)
-    not_inclued_out.to_csv(
+    not_include_out.to_csv(
         "{directory}{name}{-not-include.csv".format(directory=import_directory, name=out_name),
         columns=['url'], header=False, index=False)
     print("end")
