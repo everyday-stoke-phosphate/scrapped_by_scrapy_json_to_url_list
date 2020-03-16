@@ -3,9 +3,11 @@
 import pandas as pd
 
 """
-    プログラム全体の説明
-    実行方法とか必要なライブラリとか
-    動作確認しているPythonのバージョンとか
+データ内に指定のキーワードを含むレコードと含まないレコードに分割
+
+dataディレクトリにある指定しconfig.ymlによって指定したjsonのデータを読み込み、
+設定で指定されたキーワードのリストのファイルに含まれるものがないか検索、
+分割して保存
 """
 
 
@@ -13,54 +15,77 @@ def main():
     """ エントリポイント
 
     """
-    out = pd.DataFrame()
-    out_tmp = pd.DataFrame()
-    out_path = "../data/out"
-    df = pd.DataFrame()
-    path = "../data/all_article"
+
+    out_name = "out"
+    import_directory = "../data/"
+    import_file_name = "all_article"
+    last_number = 10
     key_list = ["新型肝炎", "新型コロナ", "プリンセス号", "ウェルステルダム",
                 "新型ウイルス", "感染", "休校", "マスク", "武漢",
                 "ウイルス性肺炎", "コロナウイルス", "陰性", "陽性", "ウイルス検査", "肺ペスト"]
     diff_check_columns = ["url", "title"]
-    search_target_colums = ["title","subtitle","description"]
+    search_target_colums = ["title", "subtitle", "description"]
+
     # 読み込み
-    df = data_import(df, path)
+    df = json_data_import(import_directory, import_file_name, last_number)
 
     # 検索
-    for key in key_list:
-        tmp = df[df['title'].str.contains(key)]
-        tmp = pd.concat([tmp, df[df['subtitle'].str.contains(key)]], ignore_index=True)
-        tmp = pd.concat([tmp, df[df['description'].str.contains(key)]], ignore_index=True)
-        out_tmp = pd.concat([out_tmp, tmp.drop_duplicates()], ignore_index=True)
-    out = pd.concat([out, out_tmp.drop_duplicates()])
-    out = out.drop_duplicates()
+    out = search_data(df, key_list, search_target_colums)
+
     # 含まれていない部分を抽出
-    not_inclued_out = pd.DataFrame()
     not_inclued_out = check_new_entry(df, out, diff_check_columns)
+    # 比較に使った邪魔な業を削除
     not_inclued_out = not_inclued_out.drop("比較用の列", axis=1)
     print("hi")
 
     # 保存
-    out.to_json("{o}-include.json".format(o=out_path), orient='records', force_ascii=False)
-    not_inclued_out.to_json("{o}-not-include.json".format(o=out_path), orient='records', force_ascii=False)
-    not_inclued_out.to_csv("{o}-not-include.csv".format(o=out_path), columns=['url'], header=False, index=False)
+    out.to_json(
+        "{directory}{name}-include.json".format(directory=import_directory, name=out_name),
+        orient='records', force_ascii=False)
+    not_inclued_out.to_json(
+        "{directory}{name}-not-include.json".format(directory=import_directory, name=out_name),
+        orient='records', force_ascii=False)
+    not_inclued_out.to_csv(
+        "{directory}{name}{-not-include.csv".format(directory=import_directory, name=out_name),
+        columns=['url'], header=False, index=False)
     print("end")
 
 
-def data_import(df, path: str):
-    for i in range(10):
-        tmp = pd.read_json("{path}{i}.json".format(path=path, i=i), orient='records')
+def json_data_import(directory: str, file_name: str, last_number: int):
+    """
+    連番になっているjsonのデータを読み込んで1まとまりのデータにする
+    data0.json, data1.json … data100.jsonが./data/にあったとき
+    path ="./data/" file_name=data, last_number=100を代入すると全てのデータが1つにまとまってDataFrame形式で帰ってくる
+    このとき各データの重複は削除される
+    :param file_name:読み込ませたいファイルの名前
+    :param directory:読み込みたいディレクトリ
+    :param last_number:
+    :return: 読み込んだデータ(pands)
+    """
+    df = pd.DataFrame()
+    for i in range(last_number):
+        tmp = pd.read_json(
+            "{path}{file_name}{i}.json".format(path=directory, file_name=file_name, i=i),
+            orient='records')
         df = pd.concat([df, tmp], ignore_index=True)
     return df.drop_duplicates()
 
 
 def search_data(data, key_list: list, target_columns_list):
+    """
+    pandsのデータからリストにあるのキーワードを含んでいるデータを抽出し、返す
+    :param data: pandsの検索をかけたいデータ
+    :param key_list: 検索したキーワードリスト
+    :param target_columns_list: 検索したいカラム名のリスト
+    :return: 検索結果(pandas)
+    """
+    # 該当するカラム
     tmp = pd.DataFrame()
     out_tmp = pd.DataFrame()
     out_data = pd.DataFrame()
     for key in key_list:
-        for clumn_name in target_columns_list:
-            tmp = pd.concat([tmp, df[df[clumn_name].str.contains(key)]], ignore_index=True)
+        for column_name in target_columns_list:
+            tmp = pd.concat([tmp, data[data[column_name].str.contains(key)]], ignore_index=True)
         out_tmp = pd.concat([out_tmp, tmp.drop_duplicates()], ignore_index=True)
     out_data = pd.concat([out_data, out_tmp.drop_duplicates()])
     out_data = out_data.drop_duplicates()
@@ -69,29 +94,32 @@ def search_data(data, key_list: list, target_columns_list):
 
 def check_new_entry(new_data, old_data, columns_list: list):
     """
-    newdataとold_dataの差集合 (new_data - old_data もしくはnew_data ∖ old_data)をpandsのDataFrame形式で返す
+    # パクリ元
+    - https://quzee.hatenablog.com/entry/2017/08/13/172151
+    - https://qiita.com/karashi39/items/e1b8939044f25dbc419f
+    new_dataとold_dataの差集合 (new_data - old_data もしくはnew_data ∖ old_data)をpandasのDataFrame形式で返す
+
+    SQLで書くとこう
+    SELECT * FROM df1
+    WHER new_data.columns_list NOT IN (SELECT columns_list FROM old_data)
+
     :param new_data: 比較元
     :param old_data: 減算元
-    :param columns_list:辞書のキー
-    :return:
+    :param columns_list:辞書のキー これを1つにしたものを主キーにする
+    :return:pandasの差分のデータ
     """
-    # new_dataにold_dataと一致する行が存在するか調べる
+    # new_dataにold_dataと一致するレコードが存在するか調べる
     if new_data.empty is False:
         new_data["比較用の列"] = new_data[columns_list].apply(lambda x: "{}_{}".format(x[0], x[1]), axis=1)
     else:
         new_data = {}
     if old_data.empty is False:
         old_data["比較用の列"] = old_data[columns_list].apply(lambda x: "{}_{}".format(x[0], x[1]), axis=1)
-        # new_dataにのみ存在する行を表示
+        # new_dataにのみ存在するレコードを作成
         df_diff = new_data[~new_data['比較用の列'].isin(old_data['比較用の列'])]
+        df_diff = df_diff.drop("比較用の列", axis=1)
     else:
         df_diff = pd.DataFrame()
-        print("hi")
-    if df_diff.empty:
-        print("新着のニュースはありません")
-    else:
-        print("差分表示")
-        print(df_diff)
     return df_diff
 
 
