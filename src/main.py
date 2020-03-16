@@ -35,9 +35,6 @@ def main():
 
     # 含まれていない部分を抽出
     not_include_out = check_new_entry(df, out, diff_check_columns)
-    # 比較に使った邪魔な業を削除
-    not_include_out = not_include_out.drop("比較用の列", axis=1)
-    print("hi")
 
     # 保存
     out.to_json(
