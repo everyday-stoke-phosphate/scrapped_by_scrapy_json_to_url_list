@@ -24,13 +24,13 @@ def main():
                 "新型ウイルス", "感染", "休校", "マスク", "武漢",
                 "ウイルス性肺炎", "コロナウイルス", "陰性", "陽性", "ウイルス検査", "肺ペスト"]
     diff_check_columns = ["url", "title"]
-    search_target_colums = ["title", "subtitle", "description"]
+    search_target_columns = ["title", "subtitle", "description"]
 
     # 読み込み
     df = json_data_import(import_directory, import_file_name, last_number)
 
     # 検索
-    out = search_data(df, key_list, search_target_colums)
+    out = search_data(df, key_list, search_target_columns)
 
     # 含まれていない部分を抽出
     not_include_out = check_new_entry(df, out, diff_check_columns)
