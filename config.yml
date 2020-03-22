@@ -3,7 +3,7 @@ import_directory: ../data/
 # 読み込むファイル名
 import_file_name: all_article
 # 読み込むファイルの雑賀の番号
-last_number: 10
+last_number: 3
 # 保存するファイル名
 out_name: out
 # 検索後が入ったcsv(1行1ワード)

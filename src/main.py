@@ -47,6 +47,9 @@ def main(config_path: str):
     out.to_json(
         "{directory}{name}-include.json".format(directory=import_directory, name=out_name),
         orient='records', force_ascii=False)
+    out.to_csv(
+        "{directory}{name}-include.txt".format(directory=import_directory, name=out_name),
+        columns=['url'], header=False, index=False)
     not_include_out.to_json(
         "{directory}{name}-not-include.json".format(directory=import_directory, name=out_name),
         orient='records', force_ascii=False)
@@ -162,5 +165,5 @@ def check_new_entry(new_data, old_data, columns_list: list):
 
 
 if __name__ == "__main__":
-    main_config_path = "../config2.yml"
+    main_config_path = "../config.yml"
     main(main_config_path)
