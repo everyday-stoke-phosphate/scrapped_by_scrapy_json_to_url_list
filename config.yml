@@ -6,7 +6,7 @@ import_file_name: all_article
 last_number: 3
 # 保存するファイル名
 out_name: out
-# 検索後が入ったcsv(1行1ワード)
+# 検索語が入ったcsv(1行1ワード)
 key_list_path: ../key_list.csv
 # レコードの主キー
 # これを組み合わせたのを主キーとして扱う
